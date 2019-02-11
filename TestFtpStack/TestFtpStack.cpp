@@ -14,13 +14,22 @@ int main( int argc, char * argv[] )
 
 	CFtpClient clsFtp;
 
+	CLog::SetLevel( LOG_DEBUG | LOG_NETWORK );
+
 	if( clsFtp.Connect( pszServerIp ) == false )
 	{
 		printf( "clsFtp.Connect(%s) error\n", pszServerIp );
 	}
 	else
 	{
+		if( clsFtp.Login( pszUserId, pszPassWord ) == false )
+		{
+			printf( "login error\n" );
+		}
+		else
+		{
 
+		}
 	}
 
 	return 0;

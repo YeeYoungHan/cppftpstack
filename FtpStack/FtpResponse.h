@@ -16,32 +16,29 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
  */
 
-#ifndef _FTP_CLIENT_H_
-#define _FTP_CLIENT_H_
+#ifndef _FTP_RESPONSE_H_
+#define _FTP_RESPONSE_H_
 
-#include "SipTcp.h"
-#include "FtpResponse.h"
+#include "StringUtility.h"
 
-class CFtpClient
+/**
+ * @ingroup FtpStack
+ * @brief FTP 응답 메시지를 파싱하여서 저장하는 클래스
+ */
+class CFtpResponse
 {
 public:
-	CFtpClient();
-	~CFtpClient();
+	CFtpResponse();
+	~CFtpResponse();
 
-	bool Connect( const char * pszServerIp, int iServerPort = 21 );
-	void Close();
+	int Parse( const char * pszText, int iTextLen );
+	int ParseLine( const char * pszText, int iTextLen, bool & bLastLine );
 
-	bool Login( const char * pszUserId, const char * pszPassWord );
+	/** FTP 응답 코드 */
+	int m_iCode;
 
-private:
-	bool Send( const char * fmt, ... );
-	bool Recv( CFtpResponse & clsResponse, int iWantCode = 0 );
-	bool Recv( int iWantCode );
-
-	Socket			m_hSocket;
-	std::string m_strServerIp;
-	int					m_iServerPort;
-	int					m_iTimeout;
+	/** FTP 응답 메시지 리스트 */
+	STRING_LIST m_clsReplyList;
 };
 
 #endif

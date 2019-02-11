@@ -154,6 +154,10 @@
 				RelativePath=".\FtpClient.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\FtpResponse.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="헤더 파일"
@@ -162,6 +166,10 @@
 			>
 			<File
 				RelativePath=".\FtpClient.h"
+				>
+			</File>
+			<File
+				RelativePath=".\FtpResponse.h"
 				>
 			</File>
 		</Filter>
