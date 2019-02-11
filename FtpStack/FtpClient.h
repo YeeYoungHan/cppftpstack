@@ -41,6 +41,7 @@ public:
 	bool Download( const char * pszFileName, const char * pszLocalPath );
 
 private:
+	bool SendBinaryPassive( );
 	bool Send( const char * fmt, ... );
 	bool Recv( CFtpResponse & clsResponse, int iWantCode = 0 );
 	bool Recv( int iWantCode );
@@ -52,6 +53,8 @@ private:
 	bool				m_bUseUtf8;
 
 	std::string m_strRecvBuf;
+	std::string m_strDataIp;
+	int					m_iDataPort;
 };
 
 #endif

@@ -33,7 +33,7 @@ int main( int argc, char * argv[] )
 		}
 		else
 		{
-			clsFtp.ChangeDirectory( "/home/test/doc/temp" );
+			clsFtp.ChangeDirectory( "/home/test" );
 			clsFtp.Upload( "C:\\Temp\\한글.jpg" );
 			clsFtp.Download( "한글.jpg", "C:\\Temp\\한글2.jpg" );
 		}

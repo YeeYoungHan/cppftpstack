@@ -173,24 +173,7 @@ bool CFtpClient::Upload( const char * pszLocalPath )
 	}
 #endif
 
-	if( Send( "TYPE I" ) == false ||
-			Recv( 200 ) == false )
-	{
-		return false;
-	}
-
-	CFtpResponse clsRes;
-
-	if( Send( "PASV" ) == false ||
-			Recv( clsRes, 227 ) == false )
-	{
-		return false;
-	}
-
-	std::string strIp;
-	int iPort;
-
-	if( clsRes.GetIpPort( strIp, iPort ) == false )
+	if( SendBinaryPassive() == false )
 	{
 		return false;
 	}
@@ -200,10 +183,10 @@ bool CFtpClient::Upload( const char * pszLocalPath )
 		return false;
 	}
 
-	Socket hSocket = TcpConnect( strIp.c_str(), iPort, m_iTimeout );
+	Socket hSocket = TcpConnect( m_strDataIp.c_str(), m_iDataPort, m_iTimeout );
 	if( hSocket == INVALID_SOCKET )
 	{
-		CLog::Print( LOG_ERROR, "%s TcpConnect(%s:%d) error(%d)", __FUNCTION__, strIp.c_str(), iPort, GetError() );
+		CLog::Print( LOG_ERROR, "%s TcpConnect(%s:%d) error(%d)", __FUNCTION__, m_strDataIp.c_str(), m_iDataPort, GetError() );
 		return false;
 	}
 
@@ -220,7 +203,7 @@ bool CFtpClient::Upload( const char * pszLocalPath )
 
 			if( TcpSend( hSocket, szBuf, iRead ) != iRead )
 			{
-				CLog::Print( LOG_ERROR, "%s TcpSend(%s:%d) error(%d)", __FUNCTION__, strIp.c_str(), iPort, GetError() );
+				CLog::Print( LOG_ERROR, "%s TcpSend(%s:%d) error(%d)", __FUNCTION__, m_strDataIp.c_str(), m_iDataPort, GetError() );
 				break;
 			}
 		}
@@ -272,24 +255,7 @@ bool CFtpClient::Download( const char * pszFileName, const char * pszLocalPath )
 	}
 #endif
 
-	if( Send( "TYPE I" ) == false ||
-			Recv( 200 ) == false )
-	{
-		return false;
-	}
-
-	CFtpResponse clsRes;
-
-	if( Send( "PASV" ) == false ||
-			Recv( clsRes, 227 ) == false )
-	{
-		return false;
-	}
-
-	std::string strIp;
-	int iPort;
-
-	if( clsRes.GetIpPort( strIp, iPort ) == false )
+	if( SendBinaryPassive() == false )
 	{
 		return false;
 	}
@@ -299,10 +265,10 @@ bool CFtpClient::Download( const char * pszFileName, const char * pszLocalPath )
 		return false;
 	}
 
-	Socket hSocket = TcpConnect( strIp.c_str(), iPort, m_iTimeout );
+	Socket hSocket = TcpConnect( m_strDataIp.c_str(), m_iDataPort, m_iTimeout );
 	if( hSocket == INVALID_SOCKET )
 	{
-		CLog::Print( LOG_ERROR, "%s TcpConnect(%s:%d) error(%d)", __FUNCTION__, strIp.c_str(), iPort, GetError() );
+		CLog::Print( LOG_ERROR, "%s TcpConnect(%s:%d) error(%d)", __FUNCTION__, m_strDataIp.c_str(), m_iDataPort, GetError() );
 		return false;
 	}
 
@@ -335,6 +301,35 @@ bool CFtpClient::Download( const char * pszFileName, const char * pszLocalPath )
 
 	if( Recv( 150 ) == false ||
 			Recv( 226 ) == false )
+	{
+		return false;
+	}
+
+	return true;
+}
+
+/**
+ * @ingroup FtpStack
+ * @brief FTP 서버로 binary type 및 passive mode 명령을 전송한다.
+ * @returns 성공하면 true 를 리턴하고 그렇지 않으면 false 를 리턴한다.
+ */
+bool CFtpClient::SendBinaryPassive( )
+{
+	if( Send( "TYPE I" ) == false ||
+			Recv( 200 ) == false )
+	{
+		return false;
+	}
+
+	CFtpResponse clsRes;
+
+	if( Send( "PASV" ) == false ||
+			Recv( clsRes, 227 ) == false )
+	{
+		return false;
+	}
+
+	if( clsRes.GetIpPort( m_strDataIp, m_iDataPort ) == false )
 	{
 		return false;
 	}
