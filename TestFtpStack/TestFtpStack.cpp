@@ -21,7 +21,7 @@ int main( int argc, char * argv[] )
 	InitNetwork();
 	CLog::SetLevel( LOG_DEBUG | LOG_NETWORK );
 
-	if( clsFtp.Connect( pszServerIp ) == false )
+	if( clsFtp.Connect( pszServerIp, 21, true ) == false )
 	{
 		printf( "clsFtp.Connect(%s) error\n", pszServerIp );
 	}
@@ -34,7 +34,8 @@ int main( int argc, char * argv[] )
 		else
 		{
 			clsFtp.ChangeDirectory( "/home/test/doc/temp" );
-			clsFtp.Upload( "C:\\Temp\\1.jpg" );
+			clsFtp.Upload( "C:\\Temp\\한글.jpg" );
+			clsFtp.Download( "한글.jpg", "C:\\Temp\\한글2.jpg" );
 		}
 	}
 

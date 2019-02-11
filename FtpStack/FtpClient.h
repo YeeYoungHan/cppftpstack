@@ -22,6 +22,10 @@
 #include "SipTcp.h"
 #include "FtpResponse.h"
 
+/**
+ * @ingroup FtpStack
+ * @brief FTP 클라이언트 클래스
+ */
 class CFtpClient
 {
 public:
@@ -34,6 +38,7 @@ public:
 	bool Login( const char * pszUserId, const char * pszPassWord );
 	bool ChangeDirectory( const char * pszPath );
 	bool Upload( const char * pszLocalPath );
+	bool Download( const char * pszFileName, const char * pszLocalPath );
 
 private:
 	bool Send( const char * fmt, ... );
@@ -45,6 +50,8 @@ private:
 	int					m_iServerPort;
 	int					m_iTimeout;
 	bool				m_bUseUtf8;
+
+	std::string m_strRecvBuf;
 };
 
 #endif

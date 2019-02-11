@@ -57,6 +57,14 @@ CFtpClient::~CFtpClient()
 	Close();
 }
 
+/**
+ * @ingroup FtpStack
+ * @brief FTP 서버에 연결한다.
+ * @param pszServerIp FTP 서버 IP 주소
+ * @param iServerPort FTP 서버 포트 번호
+ * @param bUseUtf8		파일 이름을 UTF8 로 변환하는가?
+ * @returns FTP 서버 연결에 성공하면 true 를 리턴하고 그렇지 않으면 false 를 리턴한다.
+ */
 bool CFtpClient::Connect( const char * pszServerIp, int iServerPort, bool bUseUtf8 )
 {
 	if( m_hSocket != INVALID_SOCKET ) return false;
@@ -81,6 +89,10 @@ bool CFtpClient::Connect( const char * pszServerIp, int iServerPort, bool bUseUt
 	return true;
 }
 
+/**
+ * @ingroup FtpStack
+ * @brief FTP 서버 연결을 종료한다.
+ */
 void CFtpClient::Close()
 {
 	if( m_hSocket != INVALID_SOCKET )
@@ -90,6 +102,13 @@ void CFtpClient::Close()
 	}
 }
 
+/**
+ * @ingroup FtpStack
+ * @brief FTP 서버에 로그인한다.
+ * @param pszUserId			아이디
+ * @param pszPassWord		비밀번호
+ * @returns 성공하면 true 를 리턴하고 그렇지 않으면 false 를 리턴한다.
+ */
 bool CFtpClient::Login( const char * pszUserId, const char * pszPassWord )
 {
 	if( Send( "USER %s", pszUserId ) == false || 
@@ -103,10 +122,16 @@ bool CFtpClient::Login( const char * pszUserId, const char * pszPassWord )
 	return true;
 }
 
+/**
+ * @ingroup FtpStack
+ * @brief FTP 서버의 디렉토리를 변경한다.
+ * @param pszPath 디렉토리 PATH
+ * @returns 성공하면 true 를 리턴하고 그렇지 않으면 false 를 리턴한다.
+ */
 bool CFtpClient::ChangeDirectory( const char * pszPath )
 {
 	if( Send( "CWD %s", pszPath ) == false || 
-			Recv( 200 ) == false )
+			Recv( 250 ) == false )
 	{
 		return false;
 	}
@@ -114,6 +139,12 @@ bool CFtpClient::ChangeDirectory( const char * pszPath )
 	return true;
 }
 
+/**
+ * @ingroup FtpStack
+ * @brief 파일을 FTP 서버로 업로드한다.
+ * @param pszLocalPath 로컬 파일 PATH
+ * @returns 성공하면 true 를 리턴하고 그렇지 않으면 false 를 리턴한다.
+ */
 bool CFtpClient::Upload( const char * pszLocalPath )
 {
 	std::string strFileName;
@@ -203,7 +234,8 @@ bool CFtpClient::Upload( const char * pszLocalPath )
 
 	closesocket( hSocket );
 
-	if( Recv( 150 ) == false )
+	if( Recv( 150 ) == false ||
+			Recv( 226 ) == false )
 	{
 		return false;
 	}
@@ -211,6 +243,112 @@ bool CFtpClient::Upload( const char * pszLocalPath )
 	return true;
 }
 
+/**
+ * @ingroup FtpStack
+ * @brief FTP 서버에서 파일을 다운로드한다.
+ * @param pszFileName		FTP 서버의 파일 이름
+ * @param pszLocalPath	다운로드한 파일을 저장할 파일 PATH
+ * @returns 성공하면 true 를 리턴하고 그렇지 않으면 false 를 리턴한다.
+ */
+bool CFtpClient::Download( const char * pszFileName, const char * pszLocalPath )
+{
+	std::string strFileName = pszFileName;
+
+	if( IsExistFile( pszLocalPath ) )
+	{
+		CLog::Print( LOG_ERROR, "%s file(%s) exist", __FUNCTION__, pszLocalPath );
+		return false;
+	}
+
+#ifdef WIN32
+	if( m_bUseUtf8 )
+	{
+		std::string strUtf8;
+
+		if( AnsiToUtf8( pszFileName, strUtf8 ) )
+		{
+			strFileName = strUtf8;
+		}
+	}
+#endif
+
+	if( Send( "TYPE I" ) == false ||
+			Recv( 200 ) == false )
+	{
+		return false;
+	}
+
+	CFtpResponse clsRes;
+
+	if( Send( "PASV" ) == false ||
+			Recv( clsRes, 227 ) == false )
+	{
+		return false;
+	}
+
+	std::string strIp;
+	int iPort;
+
+	if( clsRes.GetIpPort( strIp, iPort ) == false )
+	{
+		return false;
+	}
+
+	if( Send( "RETR %s", strFileName.c_str() ) == false )
+	{
+		return false;
+	}
+
+	Socket hSocket = TcpConnect( strIp.c_str(), iPort, m_iTimeout );
+	if( hSocket == INVALID_SOCKET )
+	{
+		CLog::Print( LOG_ERROR, "%s TcpConnect(%s:%d) error(%d)", __FUNCTION__, strIp.c_str(), iPort, GetError() );
+		return false;
+	}
+
+	int iFd = open( pszLocalPath, OPEN_WRITE_FLAG, OPEN_WRITE_MODE );
+	if( iFd >= 0 )
+	{
+		int iRead;
+		char szBuf[8192];
+
+		while( 1 )
+		{
+			iRead = TcpRecv( hSocket, szBuf, sizeof(szBuf), m_iTimeout );
+			if( iRead <= 0 ) break;
+
+			if( write( iFd, szBuf, iRead ) != iRead )
+			{
+				CLog::Print( LOG_ERROR, "%s write error(%d)", __FUNCTION__, GetError() );
+				break;
+			}
+		}
+
+		close( iFd );
+	}
+	else
+	{
+		CLog::Print( LOG_ERROR, "%s open(%s) error(%d)", __FUNCTION__, pszLocalPath, GetError() );
+	}
+
+	closesocket( hSocket );
+
+	if( Recv( 150 ) == false ||
+			Recv( 226 ) == false )
+	{
+		return false;
+	}
+
+	return true;
+}
+
+/**
+ * @ingroup FtpStack
+ * @brief FTP 서버로 명령을 전송한다.
+ * @param fmt			명령 
+ * @param	...			명령 인자
+ * @returns 성공하면 true 를 리턴하고 그렇지 않으면 false 를 리턴한다.
+ */
 bool CFtpClient::Send( const char * fmt, ... )
 {
 	if( m_hSocket == INVALID_SOCKET )
@@ -242,6 +380,13 @@ bool CFtpClient::Send( const char * fmt, ... )
 	return true;
 }
 
+/**
+ * @ingroup FtpStack
+ * @brief FTP 서버의 응답을 수신한다.
+ * @param clsResponse 응답 메시지를 파싱하는 객체
+ * @param iWantCode		원하는 응답 코드
+ * @returns 성공하면 true 를 리턴하고 그렇지 않으면 false 를 리턴한다.
+ */
 bool CFtpClient::Recv( CFtpResponse & clsResponse, int iWantCode )
 {
 	if( m_hSocket == INVALID_SOCKET )
@@ -250,29 +395,41 @@ bool CFtpClient::Recv( CFtpResponse & clsResponse, int iWantCode )
 		return false;
 	}
 
-	std::string strRecvBuf;
 	char	szRecvBuf[8192];
-	int n;
+	int		n, iPos;
+
+	if( m_strRecvBuf.empty() == false )
+	{
+		iPos = clsResponse.Parse( m_strRecvBuf.c_str(), (int)m_strRecvBuf.length() );
+		if( iPos > 0 )
+		{
+			m_strRecvBuf.erase( iPos );
+			goto CHECK_WANT_CODE;
+		}
+	}
 
 	while( 1 )
 	{
 		n = TcpRecv( m_hSocket, szRecvBuf, sizeof(szRecvBuf), m_iTimeout );
 		if( n <= 0 )
 		{
-			CLog::Print( LOG_ERROR, "%s TcpRecv(%s) error(%d)", __FUNCTION__, strRecvBuf.c_str(), GetError() );
+			CLog::Print( LOG_ERROR, "%s TcpRecv(%s) error(%d)", __FUNCTION__, m_strRecvBuf.c_str(), GetError() );
 			Close();
 			return false;
 		}
 
 		CLog::Print( LOG_NETWORK, "TcpRecv(%s:%d) [%.*s]", m_strServerIp.c_str(), m_iServerPort, n, szRecvBuf );
 
-		strRecvBuf.append( szRecvBuf, n );
-		if( clsResponse.Parse( strRecvBuf.c_str(), (int)strRecvBuf.length() ) > 0 )
+		m_strRecvBuf.append( szRecvBuf, n );
+		iPos = clsResponse.Parse( m_strRecvBuf.c_str(), (int)m_strRecvBuf.length() );
+		if( iPos > 0 )
 		{
+			m_strRecvBuf.erase( 0, iPos );
 			break;
 		}
 	}
 
+CHECK_WANT_CODE:
 	if( iWantCode )
 	{
 		if( clsResponse.m_iCode != iWantCode )
@@ -285,6 +442,12 @@ bool CFtpClient::Recv( CFtpResponse & clsResponse, int iWantCode )
 	return true;
 }
 
+/**
+ * @ingroup FtpStack
+ * @brief FTP 서버의 응답을 수신한다.
+ * @param iWantCode 원하는 응답 코드
+ * @returns 성공하면 true 를 리턴하고 그렇지 않으면 false 를 리턴한다.
+ */
 bool CFtpClient::Recv( int iWantCode )
 {
 	CFtpResponse clsRes;
