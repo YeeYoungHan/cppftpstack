@@ -18,10 +18,38 @@
 
 #include "SipPlatformDefine.h"
 #include "FtpClient.h"
+#include "FileUtility.h"
+#include "StringUtility.h"
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
-CFtpClient::CFtpClient() : m_hSocket(INVALID_SOCKET), m_iServerPort(21), m_iTimeout(10)
+#ifdef WIN32
+
+#include <io.h>
+#define OPEN_READ_FLAG	( _O_RDONLY | _O_BINARY )
+#define OPEN_WRITE_FLAG	( _O_WRONLY | _O_CREAT | _O_BINARY | _O_TRUNC )
+#define OPEN_READ_MODE	_S_IREAD
+#define OPEN_WRITE_MODE	( _S_IREAD | _S_IWRITE )
+
+#define open		_open
+#define read		_read
+#define write		_write
+#define close		_close
+#define unlink	DeleteFile
+
+#else
+
+#include <unistd.h>
+#define OPEN_READ_FLAG	O_RDONLY
+#define OPEN_WRITE_FLAG	( O_WRONLY | O_CREAT | O_TRUNC )
+#define OPEN_READ_MODE	( S_IRUSR | S_IRGRP | S_IROTH )
+#define OPEN_WRITE_MODE ( S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH )
+
+#endif
+
+CFtpClient::CFtpClient() : m_hSocket(INVALID_SOCKET), m_iServerPort(21), m_iTimeout(10), m_bUseUtf8(false)
 {
-	InitNetwork();
 }
 
 CFtpClient::~CFtpClient()
@@ -29,18 +57,20 @@ CFtpClient::~CFtpClient()
 	Close();
 }
 
-bool CFtpClient::Connect( const char * pszServerIp, int iServerPort )
+bool CFtpClient::Connect( const char * pszServerIp, int iServerPort, bool bUseUtf8 )
 {
 	if( m_hSocket != INVALID_SOCKET ) return false;
 
 	m_hSocket = TcpConnect( pszServerIp, iServerPort );
 	if( m_hSocket == INVALID_SOCKET )
 	{
+		CLog::Print( LOG_ERROR, "%s TcpConnect(%s:%d) error(%d)", __FUNCTION__, pszServerIp, iServerPort, GetError() );
 		return false;
 	}
 
 	m_strServerIp = pszServerIp;
 	m_iServerPort = iServerPort;
+	m_bUseUtf8 = bUseUtf8;
 
 	if( Recv( 220 ) == false )
 	{
@@ -62,22 +92,118 @@ void CFtpClient::Close()
 
 bool CFtpClient::Login( const char * pszUserId, const char * pszPassWord )
 {
-	if( Send( "USER %s", pszUserId ) == false )
+	if( Send( "USER %s", pszUserId ) == false || 
+			Recv( 331 ) == false || 
+			Send( "PASS %s", pszPassWord ) == false ||
+			Recv( 230 ) == false )
 	{
 		return false;
 	}
 
-	if( Recv( 331 ) == false )
+	return true;
+}
+
+bool CFtpClient::ChangeDirectory( const char * pszPath )
+{
+	if( Send( "CWD %s", pszPath ) == false || 
+			Recv( 200 ) == false )
 	{
 		return false;
 	}
 
-	if( Send( "PASS %s", pszPassWord ) == false )
+	return true;
+}
+
+bool CFtpClient::Upload( const char * pszLocalPath )
+{
+	std::string strFileName;
+
+	if( IsExistFile( pszLocalPath ) == false )
+	{
+		CLog::Print( LOG_ERROR, "%s file(%s) doesn't exist", __FUNCTION__, pszLocalPath );
+		return false;
+	}
+
+	if( GetFileNameOfFilePath( pszLocalPath, strFileName ) == false )
+	{
+		CLog::Print( LOG_ERROR, "%s GetFileNameOfFilePath(%s) error", __FUNCTION__, pszLocalPath );
+		return false;
+	}
+
+#ifdef WIN32
+	if( m_bUseUtf8 )
+	{
+		std::string strUtf8;
+
+		if( AnsiToUtf8( strFileName.c_str(), strUtf8 ) )
+		{
+			strFileName = strUtf8;
+		}
+	}
+#endif
+
+	if( Send( "TYPE I" ) == false ||
+			Recv( 200 ) == false )
 	{
 		return false;
 	}
 
-	if( Recv( 230 ) == false )
+	CFtpResponse clsRes;
+
+	if( Send( "PASV" ) == false ||
+			Recv( clsRes, 227 ) == false )
+	{
+		return false;
+	}
+
+	std::string strIp;
+	int iPort;
+
+	if( clsRes.GetIpPort( strIp, iPort ) == false )
+	{
+		return false;
+	}
+
+	if( Send( "STOR %s", strFileName.c_str() ) == false )
+	{
+		return false;
+	}
+
+	Socket hSocket = TcpConnect( strIp.c_str(), iPort, m_iTimeout );
+	if( hSocket == INVALID_SOCKET )
+	{
+		CLog::Print( LOG_ERROR, "%s TcpConnect(%s:%d) error(%d)", __FUNCTION__, strIp.c_str(), iPort, GetError() );
+		return false;
+	}
+
+	int iFd = open( pszLocalPath, OPEN_READ_FLAG, OPEN_READ_MODE );
+	if( iFd >= 0 )
+	{
+		int iRead;
+		char szBuf[8192];
+
+		while( 1 )
+		{
+			iRead = read( iFd, szBuf, sizeof(szBuf) );
+			if( iRead <= 0 ) break;
+
+			if( TcpSend( hSocket, szBuf, iRead ) != iRead )
+			{
+				CLog::Print( LOG_ERROR, "%s TcpSend(%s:%d) error(%d)", __FUNCTION__, strIp.c_str(), iPort, GetError() );
+				break;
+			}
+		}
+
+		close( iFd );
+	}
+	else
+	{
+		CLog::Print( LOG_ERROR, "%s open(%s) error(%d)", __FUNCTION__, pszLocalPath, GetError() );
+	}
+
+	closesocket( hSocket );
+
+	if( Recv( 150 ) == false )
 	{
 		return false;
 	}
@@ -87,6 +213,12 @@ bool CFtpClient::Login( const char * pszUserId, const char * pszPassWord )
 
 bool CFtpClient::Send( const char * fmt, ... )
 {
+	if( m_hSocket == INVALID_SOCKET )
+	{
+		CLog::Print( LOG_ERROR, "%s not connected", __FUNCTION__ );
+		return false;
+	}
+
 	va_list		ap;
 	char			szSendBuf[8192];
 	int				iSendLen;
@@ -101,6 +233,7 @@ bool CFtpClient::Send( const char * fmt, ... )
 	if( TcpSend( m_hSocket, szSendBuf, iSendLen ) != iSendLen )
 	{
 		CLog::Print( LOG_ERROR, "%s TcpSend(%s:%d) [%.*s] error(%d)", __FUNCTION__, m_strServerIp.c_str(), m_iServerPort, iSendLen, szSendBuf, GetError() );
+		Close();
 		return false;
 	}
 
@@ -111,6 +244,12 @@ bool CFtpClient::Send( const char * fmt, ... )
 
 bool CFtpClient::Recv( CFtpResponse & clsResponse, int iWantCode )
 {
+	if( m_hSocket == INVALID_SOCKET )
+	{
+		CLog::Print( LOG_ERROR, "%s not connected", __FUNCTION__ );
+		return false;
+	}
+
 	std::string strRecvBuf;
 	char	szRecvBuf[8192];
 	int n;
@@ -121,6 +260,7 @@ bool CFtpClient::Recv( CFtpResponse & clsResponse, int iWantCode )
 		if( n <= 0 )
 		{
 			CLog::Print( LOG_ERROR, "%s TcpRecv(%s) error(%d)", __FUNCTION__, strRecvBuf.c_str(), GetError() );
+			Close();
 			return false;
 		}
 

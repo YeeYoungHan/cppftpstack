@@ -34,6 +34,8 @@ public:
 	int Parse( const char * pszText, int iTextLen );
 	int ParseLine( const char * pszText, int iTextLen, bool & bLastLine );
 
+	bool GetIpPort( std::string & strIp, int & iPort );
+
 	/** FTP 응답 코드 */
 	int m_iCode;
 

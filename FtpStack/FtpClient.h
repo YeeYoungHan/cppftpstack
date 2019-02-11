@@ -28,10 +28,12 @@ public:
 	CFtpClient();
 	~CFtpClient();
 
-	bool Connect( const char * pszServerIp, int iServerPort = 21 );
+	bool Connect( const char * pszServerIp, int iServerPort = 21, bool bUseUtf8 = false );
 	void Close();
 
 	bool Login( const char * pszUserId, const char * pszPassWord );
+	bool ChangeDirectory( const char * pszPath );
+	bool Upload( const char * pszLocalPath );
 
 private:
 	bool Send( const char * fmt, ... );
@@ -42,6 +44,7 @@ private:
 	std::string m_strServerIp;
 	int					m_iServerPort;
 	int					m_iTimeout;
+	bool				m_bUseUtf8;
 };
 
 #endif

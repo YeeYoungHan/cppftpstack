@@ -129,3 +129,60 @@ int CFtpResponse::ParseLine( const char * pszText, int iTextLen, bool & bLastLin
 
 	return iLen;
 }
+
+/**
+ * @ingroup FtpStack
+ * @brief 응답 메시지에서 IP주소 및 포트 번호를 가져온다.
+ * @returns 성공하면 true 를 리턴하고 그렇지 않으면 false 를 리턴한다.
+ */
+bool CFtpResponse::GetIpPort( std::string & strIp, int & iPort )
+{
+	strIp.clear();
+	iPort = 0;
+
+	if( m_clsReplyList.empty() ) return false;
+
+	// Entering Passive Mode (h1,h2,h3,h4,p1,p2). 문자열을 파싱하여서 IP주소 및 포트 번호를 저장한다.
+	STRING_LIST::iterator itSL = m_clsReplyList.begin();
+
+	const char * pszLine = itSL->c_str();
+	int iLineLen = (int)itSL->length();
+	int arrNum[6];
+	char szNum[11];
+	int iNumPos = 0, iNumIndex = 0;
+
+	for( int i = 0; i < iLineLen; ++i )
+	{
+		if( isdigit( pszLine[i] ) )
+		{
+			szNum[iNumPos] = pszLine[i];
+			++iNumPos;
+		}
+		else if( pszLine[i] == ',' )
+		{
+			szNum[iNumPos] = '\0';
+			arrNum[iNumIndex] = atoi(szNum);
+			iNumPos = 0;
+			++iNumIndex;
+		}
+	}
+
+	if( iNumPos > 0 )
+	{
+		szNum[iNumPos] = '\0';
+		arrNum[iNumIndex] = atoi(szNum);
+		iNumPos = 0;
+		++iNumIndex;
+	}
+
+	if( iNumIndex != 6 ) return false;
+
+	char szIp[21];
+
+	snprintf( szIp, sizeof(szIp), "%d.%d.%d.%d", arrNum[0], arrNum[1], arrNum[2], arrNum[3] );
+	strIp = szIp;
+	
+	iPort = arrNum[4] * 256 + arrNum[5];
+
+	return true;
+}
