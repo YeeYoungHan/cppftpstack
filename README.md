@@ -30,4 +30,6 @@ C++ STL 기반으로 FTP 클라이언트 라이브러리를 개발하는 프로�
   * https://github.com/YeeYoungHan/cppsipstack
 
 * TestFtpStack
-  * FtpStack 테스트 
+  * FtpStack 테스트
+  * CFtpClient 로 FTP 업로드, 다운로드 등의 사용법을 확인하실 수 있습니다.
+

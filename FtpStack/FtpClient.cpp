@@ -48,6 +48,8 @@
 
 #endif
 
+#include "FtpClientDirectory.hpp"
+
 CFtpClient::CFtpClient() : m_hSocket(INVALID_SOCKET), m_iServerPort(21), m_iTimeout(10), m_bUseUtf8(false)
 {
 }
@@ -115,23 +117,6 @@ bool CFtpClient::Login( const char * pszUserId, const char * pszPassWord )
 			Recv( 331 ) == false || 
 			Send( "PASS %s", pszPassWord ) == false ||
 			Recv( 230 ) == false )
-	{
-		return false;
-	}
-
-	return true;
-}
-
-/**
- * @ingroup FtpStack
- * @brief FTP 서버의 디렉토리를 변경한다.
- * @param pszPath 디렉토리 PATH
- * @returns 성공하면 true 를 리턴하고 그렇지 않으면 false 를 리턴한다.
- */
-bool CFtpClient::ChangeDirectory( const char * pszPath )
-{
-	if( Send( "CWD %s", pszPath ) == false || 
-			Recv( 250 ) == false )
 	{
 		return false;
 	}

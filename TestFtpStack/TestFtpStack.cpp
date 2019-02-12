@@ -5,6 +5,9 @@ void PrintUsage( const char * pszProgram )
 	printf( "[Usage] %s {ftp IP} {user id} {password} upload {remote folder path} {local file path}\n", pszProgram );
 	printf( "        %s {ftp IP} {user id} {password} upload_folder {remote folder path} {local folder path}\n", pszProgram );
 	printf( "        %s {ftp IP} {user id} {password} download {remote folder path} {remote filename} {local file path}\n", pszProgram );
+	printf( "        %s {ftp IP} {user id} {password} get_folder\n", pszProgram );
+	printf( "        %s {ftp IP} {user id} {password} create_folder {remote folder path}\n", pszProgram );
+	printf( "        %s {ftp IP} {user id} {password} delete_folder {remote folder path}\n", pszProgram );
 }
 
 int main( int argc, char * argv[] )
@@ -13,7 +16,7 @@ int main( int argc, char * argv[] )
 	_CrtSetDbgFlag( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF | _CRTDBG_CHECK_ALWAYS_DF );
 #endif
 
-	if( argc <= 5 )
+	if( argc < 5 )
 	{
 		PrintUsage( argv[0] );
 		return 0;
@@ -29,6 +32,7 @@ int main( int argc, char * argv[] )
 	InitNetwork();
 	CLog::SetLevel( LOG_DEBUG | LOG_NETWORK );
 
+	// FTP 서버 연결 및 로그인
 	if( clsFtp.Connect( pszServerIp, 21, true ) == false )
 	{
 		printf( "clsFtp.Connect(%s) error\n", pszServerIp );
@@ -43,7 +47,8 @@ int main( int argc, char * argv[] )
 
 	if( !strcmp( pszCommand, "upload" ) )
 	{
-		if( argc <= 6 )
+		// FTP 업로드
+		if( argc < 7 )
 		{
 			PrintUsage( argv[0] );
 			return 0;
@@ -52,9 +57,9 @@ int main( int argc, char * argv[] )
 		const char * pszRemoteFolder = argv[5];
 		const char * pszLocalPath = argv[6];
 
-		if( clsFtp.ChangeDirectory( pszRemoteFolder ) == false )
+		if( clsFtp.ChangeFolder( pszRemoteFolder ) == false )
 		{
-			printf( "clsFtp.ChangeDirectory(%s) error\n", pszRemoteFolder );
+			printf( "clsFtp.ChangeFolder(%s) error\n", pszRemoteFolder );
 			return 0;
 		}
 
@@ -66,7 +71,8 @@ int main( int argc, char * argv[] )
 	}
 	else if( !strcmp( pszCommand, "upload_folder" ) )
 	{
-		if( argc <= 6 )
+		// 폴더에 포함된 모든 파일을 FTP 업로드
+		if( argc < 7 )
 		{
 			PrintUsage( argv[0] );
 			return 0;
@@ -77,9 +83,9 @@ int main( int argc, char * argv[] )
 		FILE_LIST clsFileList;
 		FILE_LIST::iterator itFL;
 
-		if( clsFtp.ChangeDirectory( pszRemoteFolder ) == false )
+		if( clsFtp.ChangeFolder( pszRemoteFolder ) == false )
 		{
-			printf( "clsFtp.ChangeDirectory(%s) error\n", pszRemoteFolder );
+			printf( "clsFtp.ChangeFolder(%s) error\n", pszRemoteFolder );
 			return 0;
 		}
 
@@ -99,7 +105,8 @@ int main( int argc, char * argv[] )
 	}
 	else if( !strcmp( pszCommand, "download" ) )
 	{
-		if( argc <= 7 )
+		// FTP 다운로드
+		if( argc < 8 )
 		{
 			PrintUsage( argv[0] );
 			return 0;
@@ -109,15 +116,78 @@ int main( int argc, char * argv[] )
 		const char * pszRemoteFile = argv[6];
 		const char * pszLocalPath = argv[7];
 
-		if( clsFtp.ChangeDirectory( pszRemoteFolder ) == false )
+		if( clsFtp.ChangeFolder( pszRemoteFolder ) == false )
 		{
-			printf( "clsFtp.ChangeDirectory(%s) error\n", pszRemoteFolder );
+			printf( "clsFtp.ChangeFolder(%s) error\n", pszRemoteFolder );
 			return 0;
 		}
 
 		if( clsFtp.Download( pszRemoteFile, pszLocalPath ) == false )
 		{
 			printf( "clsFtp.Download(%s) error\n", pszRemoteFile );
+			return 0;
+		}
+	}
+	else if( !strcmp( pszCommand, "get_folder" ) )
+	{
+		// FTP 현재 폴더 가져오기
+		std::string strPath;
+
+		if( clsFtp.GetCurrentFolder( strPath ) == false )
+		{
+			printf( "clsFtp.GetCurrentFolder() error\n" );
+			return 0;
+		}
+
+		printf( "current directory[%s]\n", strPath.c_str() );
+	}
+	else if( !strcmp( pszCommand, "create_folder" ) )
+	{
+		// FTP 폴더 생성하기
+		if( argc < 6 )
+		{
+			PrintUsage( argv[0] );
+			return 0;
+		}
+
+		const char * pszRemoteFolder = argv[5];
+
+		if( clsFtp.CreateFolder( pszRemoteFolder ) == false )
+		{
+			printf( "clsFtp.CreateFolder(%s) error\n", pszRemoteFolder );
+			return 0;
+		}
+
+		if( clsFtp.ChangeFolder( pszRemoteFolder ) == false )
+		{
+			printf( "clsFtp.ChangeFolder(%s) error\n", pszRemoteFolder );
+			return 0;
+		}
+
+		std::string strPath;
+
+		if( clsFtp.GetCurrentFolder( strPath ) == false )
+		{
+			printf( "clsFtp.GetCurrentFolder() error\n" );
+			return 0;
+		}
+
+		printf( "current directory[%s]\n", strPath.c_str() );
+	}
+	else if( !strcmp( pszCommand, "delete_folder" ) )
+	{
+		// FTP 폴더 삭제하기
+		if( argc < 6 )
+		{
+			PrintUsage( argv[0] );
+			return 0;
+		}
+
+		const char * pszRemoteFolder = argv[5];
+
+		if( clsFtp.DeleteFolder( pszRemoteFolder ) == false )
+		{
+			printf( "clsFtp.DeleteFolder(%s) error\n", pszRemoteFolder );
 			return 0;
 		}
 	}

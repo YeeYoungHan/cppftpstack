@@ -36,7 +36,12 @@ public:
 	void Close();
 
 	bool Login( const char * pszUserId, const char * pszPassWord );
-	bool ChangeDirectory( const char * pszPath );
+
+	bool ChangeFolder( const char * pszPath );
+	bool GetCurrentFolder( std::string & strPath );
+	bool CreateFolder( const char * pszPath );
+	bool DeleteFolder( const char * pszPath );
+	
 	bool Upload( const char * pszLocalPath );
 	bool Download( const char * pszFileName, const char * pszLocalPath );
 
