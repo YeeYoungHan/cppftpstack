@@ -8,6 +8,7 @@ void PrintUsage( const char * pszProgram )
 	printf( "        %s {ftp IP} {user id} {password} get_folder\n", pszProgram );
 	printf( "        %s {ftp IP} {user id} {password} create_folder {remote folder path}\n", pszProgram );
 	printf( "        %s {ftp IP} {user id} {password} delete_folder {remote folder path}\n", pszProgram );
+	printf( "        %s {ftp IP} {user id} {password} list\n", pszProgram );
 }
 
 int main( int argc, char * argv[] )
@@ -189,6 +190,30 @@ int main( int argc, char * argv[] )
 		{
 			printf( "clsFtp.DeleteFolder(%s) error\n", pszRemoteFolder );
 			return 0;
+		}
+	}
+	else if( !strcmp( pszCommand, "list" ) )
+	{
+		// FTP 폴더에 포함된 파일 리스트 출력하기
+		FTP_FILE_LIST clsList;
+		FTP_FILE_LIST::iterator itFL;
+
+		if( clsFtp.List( clsList ) == false )
+		{
+			printf( "clsFtp.List()\n" );
+			return 0;
+		}
+
+		for( itFL = clsList.begin(); itFL != clsList.end(); ++itFL )
+		{
+			if( itFL->m_bFolder )
+			{
+				printf( "folder[%s]\n", itFL->m_strFileName.c_str() );
+			}
+			else
+			{
+				printf( "file[%s]\n", itFL->m_strFileName.c_str() );
+			}
 		}
 	}
 

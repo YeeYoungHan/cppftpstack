@@ -146,12 +146,14 @@
 	</References>
 	<Files>
 		<Filter
-			Name="소스 파일"
-			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
-			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
+			Name="FTP Client"
 			>
 			<File
 				RelativePath=".\FtpClient.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\FtpClient.h"
 				>
 			</File>
 			<File
@@ -159,17 +161,27 @@
 				>
 			</File>
 			<File
-				RelativePath=".\FtpResponse.cpp"
+				RelativePath=".\FtpClientFile.hpp"
+				>
+			</File>
+			<File
+				RelativePath=".\FtpClientList.hpp"
 				>
 			</File>
 		</Filter>
 		<Filter
-			Name="헤더 파일"
-			Filter="h;hpp;hxx;hm;inl;inc;xsd"
-			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
+			Name="FTP"
 			>
 			<File
-				RelativePath=".\FtpClient.h"
+				RelativePath=".\FtpFile.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\FtpFile.h"
+				>
+			</File>
+			<File
+				RelativePath=".\FtpResponse.cpp"
 				>
 			</File>
 			<File

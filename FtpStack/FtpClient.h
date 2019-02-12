@@ -20,6 +20,7 @@
 #define _FTP_CLIENT_H_
 
 #include "SipTcp.h"
+#include "FtpFile.h"
 #include "FtpResponse.h"
 
 /**
@@ -37,13 +38,18 @@ public:
 
 	bool Login( const char * pszUserId, const char * pszPassWord );
 
+	// FtpClientDirectory.hpp
 	bool ChangeFolder( const char * pszPath );
 	bool GetCurrentFolder( std::string & strPath );
 	bool CreateFolder( const char * pszPath );
 	bool DeleteFolder( const char * pszPath );
 	
+	// FtpClientFile.hpp
 	bool Upload( const char * pszLocalPath );
 	bool Download( const char * pszFileName, const char * pszLocalPath );
+
+	// FtpClientList.hpp
+	bool List( FTP_FILE_LIST & clsList );
 
 private:
 	bool SendBinaryPassive( );
