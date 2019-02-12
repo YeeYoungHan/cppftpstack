@@ -2,7 +2,9 @@
 
 void PrintUsage( const char * pszProgram )
 {
-	printf( "[Usage] %s {ftp IP} {user id} {password} upload_folder {remote folder path} {local folder path}\n", pszProgram );
+	printf( "[Usage] %s {ftp IP} {user id} {password} upload {remote folder path} {local file path}\n", pszProgram );
+	printf( "        %s {ftp IP} {user id} {password} upload_folder {remote folder path} {local folder path}\n", pszProgram );
+	printf( "        %s {ftp IP} {user id} {password} download {remote folder path} {remote filename} {local file path}\n", pszProgram );
 }
 
 int main( int argc, char * argv[] )
@@ -39,7 +41,30 @@ int main( int argc, char * argv[] )
 		return 0;
 	}
 
-	if( !strcmp( pszCommand, "upload_folder" ) )
+	if( !strcmp( pszCommand, "upload" ) )
+	{
+		if( argc <= 6 )
+		{
+			PrintUsage( argv[0] );
+			return 0;
+		}
+
+		const char * pszRemoteFolder = argv[5];
+		const char * pszLocalPath = argv[6];
+
+		if( clsFtp.ChangeDirectory( pszRemoteFolder ) == false )
+		{
+			printf( "clsFtp.ChangeDirectory(%s) error\n", pszRemoteFolder );
+			return 0;
+		}
+
+		if( clsFtp.Upload( pszLocalPath ) == false )
+		{
+			printf( "clsFtp.Upload(%s) error\n", pszLocalPath );
+			return 0;
+		}
+	}
+	else if( !strcmp( pszCommand, "upload_folder" ) )
 	{
 		if( argc <= 6 )
 		{
@@ -70,6 +95,30 @@ int main( int argc, char * argv[] )
 				printf( "clsFtp.Upload(%s) error\n", strPath.c_str() );
 				break;
 			}
+		}
+	}
+	else if( !strcmp( pszCommand, "download" ) )
+	{
+		if( argc <= 7 )
+		{
+			PrintUsage( argv[0] );
+			return 0;
+		}
+
+		const char * pszRemoteFolder = argv[5];
+		const char * pszRemoteFile = argv[6];
+		const char * pszLocalPath = argv[7];
+
+		if( clsFtp.ChangeDirectory( pszRemoteFolder ) == false )
+		{
+			printf( "clsFtp.ChangeDirectory(%s) error\n", pszRemoteFolder );
+			return 0;
+		}
+
+		if( clsFtp.Download( pszRemoteFile, pszLocalPath ) == false )
+		{
+			printf( "clsFtp.Download(%s) error\n", pszRemoteFile );
+			return 0;
 		}
 	}
 
