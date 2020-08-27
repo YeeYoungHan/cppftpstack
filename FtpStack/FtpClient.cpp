@@ -217,7 +217,7 @@ bool CFtpClient::Recv( CFtpResponse & clsResponse, int iWantCode )
 		iPos = clsResponse.Parse( m_strRecvBuf.c_str(), (int)m_strRecvBuf.length() );
 		if( iPos > 0 )
 		{
-			m_strRecvBuf.erase( iPos );
+			m_strRecvBuf.erase( 0, iPos );
 			goto CHECK_WANT_CODE;
 		}
 	}

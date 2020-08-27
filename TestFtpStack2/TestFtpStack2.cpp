@@ -39,32 +39,40 @@ int main( int argc, char * argv[] )
 		return 0;
 	}
 
-	// FTP 폴더에 포함된 파일 리스트 출력하기
-	FTP_FILE_LIST clsList;
-	FTP_FILE_LIST::iterator itFL;
-
-	if( clsFtp.List( clsList ) == false )
+	for( int i = 0; i < 100; ++i )
 	{
-		printf( "clsFtp.List()\n" );
-		return 0;
-	}
+		FTP_FILE_LIST clsList;
+		FTP_FILE_LIST::iterator itFL;
 
-	for( itFL = clsList.begin(); itFL != clsList.end(); ++itFL )
-	{
-		if( itFL->m_bFolder )
+		if( clsFtp.List( clsList ) == false )
 		{
-			printf( "folder[%s]\n", itFL->m_strFileName.c_str() );
+			printf( "clsFtp.List()\n" );
+			return 0;
 		}
-		else
-		{
-			printf( "file[%s]\n", itFL->m_strFileName.c_str() );
-		}
-	}
 
-	if( clsFtp.ChangeFolder( "bin" ) == false )
-	{
-		printf( "clsFtp.ChangeFolder error\n" );
-		return 0;
+		for( itFL = clsList.begin(); itFL != clsList.end(); ++itFL )
+		{
+			if( itFL->m_bFolder )
+			{
+				printf( "folder[%s]\n", itFL->m_strFileName.c_str() );
+			}
+			else
+			{
+				printf( "file[%s]\n", itFL->m_strFileName.c_str() );
+			}
+		}
+
+		if( clsFtp.ChangeFolder( "temp" ) == false )
+		{
+			printf( "clsFtp.ChangeFolder error\n" );
+			return 0;
+		}
+
+		if( clsFtp.ChangeFolder( ".." ) == false )
+		{
+			printf( "clsFtp.ChangeFolder error\n" );
+			return 0;
+		}
 	}
 
 	return 0;
