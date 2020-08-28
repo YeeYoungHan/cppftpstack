@@ -92,17 +92,17 @@ int CFtpResponse::ParseLine( const char * pszText, int iTextLen, bool & bLastLin
 		return -1;
 	}
 
-	for( int i = 0; i < 3; ++i )
-	{
-		if( isdigit( pszText[i] ) == 0 ) return -1;
-	}
-
 	int iLen = -1;
 
-	if( pszText[3] == ' ' )
+	if( pszText[0] != ' ' && pszText[3] == ' ' )
 	{
 		bLastLine = true;
-		
+
+		for( int i = 0; i < 3; ++i )
+		{
+			if( isdigit( pszText[i] ) == 0 ) return -1;
+		}
+
 		std::string strCode;
 		strCode.append( pszText, 3 );
 

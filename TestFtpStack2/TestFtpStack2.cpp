@@ -65,13 +65,10 @@ int main( int argc, char * argv[] )
 		if( clsFtp.ChangeFolder( "temp" ) == false )
 		{
 			printf( "clsFtp.ChangeFolder error\n" );
-			return 0;
 		}
-
-		if( clsFtp.ChangeFolder( ".." ) == false )
+		else if( clsFtp.ChangeFolder( ".." ) == false )
 		{
 			printf( "clsFtp.ChangeFolder error\n" );
-			return 0;
 		}
 	}
 
