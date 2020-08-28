@@ -120,6 +120,19 @@ bool CFtpClient::Download( const char * pszFileName, const char * pszLocalPath )
 		return false;
 	}
 
+	std::string strFolder;
+
+	GetFolderPathOfFilePath( pszLocalPath, strFolder );
+
+	if( IsExistFile( strFolder.c_str() ) == false )
+	{
+		if( CDirectory::Create( strFolder.c_str() ) == false )
+		{
+			CLog::Print( LOG_ERROR, "%s file(%s) create error", __FUNCTION__, strFolder.c_str() );
+			return false;
+		}
+	}
+
 #ifdef WIN32
 	if( m_bUseUtf8 )
 	{

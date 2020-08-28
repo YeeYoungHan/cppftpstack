@@ -27,7 +27,7 @@ int main( int argc, char * argv[] )
 	CLog::SetLevel( LOG_DEBUG | LOG_NETWORK );
 
 	// FTP 서버 연결 및 로그인
-	if( clsFtp.Connect( pszServerIp, 21, true ) == false )
+	if( clsFtp.Connect( pszServerIp, 21, false ) == false )
 	{
 		printf( "clsFtp.Connect(%s) error\n", pszServerIp );
 		return 0;
@@ -39,6 +39,34 @@ int main( int argc, char * argv[] )
 		return 0;
 	}
 
+	FTP_FILE_LIST clsList;
+	FTP_FILE_LIST::iterator itFL;
+
+	if( clsFtp.List( clsList ) == false )
+	{
+		printf( "clsFtp.List()\n" );
+		return 0;
+	}
+
+	for( itFL = clsList.begin(); itFL != clsList.end(); ++itFL )
+	{
+		if( itFL->m_bFolder )
+		{
+			printf( "folder[%s]\n", itFL->m_strFileName.c_str() );
+		}
+		else
+		{
+			printf( "file[%s]\n", itFL->m_strFileName.c_str() );
+		}
+	}
+
+
+	if( clsFtp.Download( "FTP-2.png", "c:\\temp\\download\\FTP-2.png" ) == false )
+	{
+		printf( "download error\n" );
+	}
+
+	/*
 	for( int i = 0; i < 100; ++i )
 	{
 		FTP_FILE_LIST clsList;
@@ -71,6 +99,7 @@ int main( int argc, char * argv[] )
 			printf( "clsFtp.ChangeFolder error\n" );
 		}
 	}
+	*/
 
 	return 0;
 }
