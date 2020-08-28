@@ -88,6 +88,14 @@ bool CFtpClient::List( FTP_FILE_LIST & clsList )
 		{
 			iPos = i + 1;
 		}
+		else if( pszBuf[i] == '<' )
+		{
+			// IIS FTP 에서 폴더를 구분하기 위한 기능
+			if( i + 5 < iLen && !strncmp( pszBuf + i, "<DIR>", 5 ) )
+			{
+				clsFile.m_bFolder = true;
+			}
+		}
 		else if( bRowStart )
 		{
 			if( pszBuf[i] == 'd' )
