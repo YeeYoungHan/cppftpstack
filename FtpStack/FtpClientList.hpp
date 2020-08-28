@@ -66,9 +66,14 @@ bool CFtpClient::List( FTP_FILE_LIST & clsList )
 
 	const char * pszBuf = strBuf.c_str();
 	int iLen = strBuf.length();
-	int iPos = -1;
-	bool bRowStart = true;
+	int iPos = -1, iWordCount = 0;
+	bool bRowStart = true, bWindow = false;
 	CFtpFile clsFile;
+
+	if( iLen >= 9 && pszBuf[8] == ' ' )
+	{
+		bWindow = true;
+	}
 
 	for( int i = 0; i < iLen; ++i )
 	{
@@ -80,13 +85,32 @@ bool CFtpClient::List( FTP_FILE_LIST & clsList )
 				clsList.push_back( clsFile );
 				clsFile.Clear();
 				iPos = -1;
+				iWordCount = 0;
 			}
 
 			bRowStart = true;
 		}
 		else if( pszBuf[i] == ' ' )
 		{
-			iPos = i + 1;
+			if( i >= 1 && pszBuf[i-1] != ' ' )
+			{
+				++iWordCount;
+			}
+
+			if( bWindow )
+			{
+				if( iWordCount == 3 )
+				{
+					iPos = i + 1;
+				}
+			}
+			else
+			{
+				if( iWordCount == 8 )
+				{
+					iPos = i + 1;
+				}
+			}
 		}
 		else if( pszBuf[i] == '<' )
 		{
