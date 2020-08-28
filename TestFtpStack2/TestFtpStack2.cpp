@@ -61,9 +61,9 @@ int main( int argc, char * argv[] )
 	}
 
 
-	if( clsFtp.Download( "FTP-2.png", "c:\\temp\\download\\FTP-2.png" ) == false )
+	if( clsFtp.Upload( "c:\\temp\\ÇÑ±Û.txt" ) == false )
 	{
-		printf( "download error\n" );
+		printf( "upload error\n" );
 	}
 
 	/*
