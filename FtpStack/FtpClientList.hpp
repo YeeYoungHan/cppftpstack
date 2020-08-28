@@ -82,6 +82,19 @@ bool CFtpClient::List( FTP_FILE_LIST & clsList )
 			if( iPos != -1 )
 			{
 				clsFile.m_strFileName.append( pszBuf + iPos, i - iPos );
+
+#ifdef WIN32
+				if( m_bUseUtf8 )
+				{
+					std::string strAnsi;
+
+					if( Utf8ToAnsi( clsFile.m_strFileName.c_str(), strAnsi ) )
+					{
+						clsFile.m_strFileName = strAnsi;
+					}
+				}
+#endif
+
 				clsList.push_back( clsFile );
 				clsFile.Clear();
 				iPos = -1;
