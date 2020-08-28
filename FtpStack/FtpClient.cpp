@@ -239,7 +239,8 @@ bool CFtpClient::Recv( CFtpResponse & clsResponse, int iWantCode )
 		if( iPos > 0 )
 		{
 			m_strRecvBuf.erase( 0, iPos );
-			break;
+
+			if( clsResponse.m_iCode != 0 ) break;
 		}
 	}
 
