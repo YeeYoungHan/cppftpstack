@@ -247,7 +247,15 @@ bool CFtpClient::Recv( CFtpResponse & clsResponse, int iWantCode )
 CHECK_WANT_CODE:
 	if( iWantCode )
 	{
-		if( clsResponse.m_iCode != iWantCode )
+		if( iWantCode == 150 )
+		{
+			if( clsResponse.m_iCode != 150 && clsResponse.m_iCode != 125 )
+			{
+				CLog::Print( LOG_ERROR, "%s reply code(%d) != want code(%d)", __FUNCTION__, clsResponse.m_iCode, iWantCode );
+				return false;
+			}
+		}
+		else if( clsResponse.m_iCode != iWantCode )
 		{
 			CLog::Print( LOG_ERROR, "%s reply code(%d) != want code(%d)", __FUNCTION__, clsResponse.m_iCode, iWantCode );
 			return false;
