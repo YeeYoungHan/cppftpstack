@@ -24,6 +24,11 @@
 #include "FtpResponse.h"
 
 /**
+ * @defgroup FtpStack FtpStack
+ * FTP 클라이언트 라이브러리
+ */
+
+/**
  * @ingroup FtpStack
  * @brief FTP 클라이언트 클래스
  */

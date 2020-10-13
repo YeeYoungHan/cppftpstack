@@ -188,6 +188,10 @@
 				RelativePath=".\FtpResponse.h"
 				>
 			</File>
+			<File
+				RelativePath=".\FtpStackVersion.h"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
