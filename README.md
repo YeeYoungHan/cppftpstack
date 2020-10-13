@@ -20,6 +20,10 @@ C++ STL 기반으로 FTP 클라이언트 라이브러리를 개발하는 프로�
 * 윈도우 : Visual C++ 2008
 * 리눅스 : g++
 
+### API 문서
+
+* https://yeeyounghan.github.io/doc/CppFtpStack/html/index.html
+
 ### 폴더 설명
 
 * FtpStack
