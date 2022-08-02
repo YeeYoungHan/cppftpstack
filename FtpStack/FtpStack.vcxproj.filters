@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="FTP Client">
+      <UniqueIdentifier>{c25d7c48-a267-426b-baad-d2ef1fa7ed69}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FTP">
+      <UniqueIdentifier>{b18bbac0-01f6-4b52-ac43-3e78cdc25532}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="FtpClient.cpp">
+      <Filter>FTP Client</Filter>
+    </ClCompile>
+    <ClCompile Include="FtpFile.cpp">
+      <Filter>FTP</Filter>
+    </ClCompile>
+    <ClCompile Include="FtpResponse.cpp">
+      <Filter>FTP</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="FtpClient.h">
+      <Filter>FTP Client</Filter>
+    </ClInclude>
+    <ClInclude Include="FtpClientDirectory.hpp">
+      <Filter>FTP Client</Filter>
+    </ClInclude>
+    <ClInclude Include="FtpClientFile.hpp">
+      <Filter>FTP Client</Filter>
+    </ClInclude>
+    <ClInclude Include="FtpClientList.hpp">
+      <Filter>FTP Client</Filter>
+    </ClInclude>
+    <ClInclude Include="FtpFile.h">
+      <Filter>FTP</Filter>
+    </ClInclude>
+    <ClInclude Include="FtpResponse.h">
+      <Filter>FTP</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
